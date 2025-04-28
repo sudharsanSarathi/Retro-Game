@@ -595,9 +595,10 @@
                     player.style.transition = 'none';
                     player.classList.add('blinking');
                 });
-                // Ensure player me is visible
+                // Ensure player me is visible and start overlay is hidden
                 const mePlayer = document.querySelector('.Player.me');
                 if (mePlayer) mePlayer.classList.add('show-me');
+                if (startOverlay) startOverlay.style.display = 'none';
                 // Show game over after blinking
                 setTimeout(() => {
                     isGameOverTransitioning = false;
@@ -1060,13 +1061,13 @@
                 });
             }
 
-            // On load, show overlay and pause game
-            if (startOverlay) startOverlay.style.display = 'flex';
+            // On load, hide start overlay and show player me
+            if (startOverlay) startOverlay.style.display = 'none';
             isPaused = true;
             hasStarted = false;
-            // Hide the player me initially if start overlay is visible
+            // Show the player me initially
             const mePlayerInit = document.querySelector('.Player.me');
-            if (mePlayerInit) mePlayerInit.classList.remove('show-me');
+            if (mePlayerInit) mePlayerInit.classList.add('show-me');
         });
     </script>
 </body>
