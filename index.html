@@ -591,7 +591,7 @@
                     player.style.transition = 'none';
                     player.classList.add('blinking');
                 });
-                // After blinking, return to start-blink state
+                // After blinking, automatically restart the game
                 setTimeout(() => {
                     isGameOverTransitioning = false;
                     if (isGameOver) {
@@ -601,14 +601,14 @@
                             }
                         });
                         gameOverText.style.display = 'none';
-                        // Show start overlay and hide all players
-                        if (startOverlay) startOverlay.style.display = 'flex';
-                        document.querySelectorAll('.Player.default').forEach(p => p.remove());
-                        document.querySelectorAll('.Player.me').forEach(p => p.remove());
-                        hasStarted = false;
-                        isPaused = true;
+                        // Restart the game automatically after 1 second
+                        setTimeout(() => {
+                            resetGame();
+                            // Simulate up arrow press to start the game
+                            handleButtonClick('up');
+                        }, 1000);
                     }
-                }, 2000); // 2 seconds
+                }, 2000); // 2 seconds for blinking
             }
 
             function resetGame() {
