@@ -367,7 +367,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.9);
             z-index: 200;
             font-family: 'DS-Digital', sans-serif;
             font-size: 32px;
@@ -517,19 +517,21 @@
             let buttonSoundUnlocked = false;
             let gameStarted = false;
             const playerGrid = document.querySelector('.Player-Grid');
-            let hasStarted = true; // Always start immediately
-            // Remove all default players and player me
-            document.querySelectorAll('.Player.default').forEach(p => p.remove());
-            document.querySelectorAll('.Player.me').forEach(p => p.remove());
-            // Create the player me
-            const newMePlayer = document.createElement('div');
-            newMePlayer.className = 'Player me show-me';
-            playerGrid.appendChild(newMePlayer);
-            playerMe = newMePlayer;
-            // Start the game immediately
-            isPaused = false;
-            startGame();
+            let hasStarted = false;
+            const startOverlay = document.getElementById('startOverlay');
             
+            // Remove existing default players
+            document.querySelectorAll('.Player.default').forEach(p => p.remove());
+            
+            // Create initial me player
+            playerGrid.innerHTML = ''; // Clear any existing content
+            const initialMePlayer = document.createElement('div');
+            initialMePlayer.className = 'Player me';
+            playerGrid.appendChild(initialMePlayer);
+            
+            // Set initial position for player
+            updatePosition();
+
             function updateScore() {
                 // Convert score to string and pad with zeros based on length
                 const scoreStr = String(score);
@@ -593,7 +595,10 @@
                     player.style.transition = 'none';
                     player.classList.add('blinking');
                 });
-                // After blinking, restart the game automatically
+                // Ensure player me is visible
+                const mePlayer = document.querySelector('.Player.me');
+                if (mePlayer) mePlayer.classList.add('show-me');
+                // Show game over after blinking
                 setTimeout(() => {
                     isGameOverTransitioning = false;
                     if (isGameOver) {
@@ -602,24 +607,9 @@
                                 player.remove();
                             }
                         });
-                        gameOverText.style.display = 'none';
-                        resetGame();
-                        // Start the game again
-                        isPaused = false;
-                        hasStarted = true;
-                        // Create the player me
-                        if (!document.querySelector('.Player.me')) {
-                            const newMePlayer = document.createElement('div');
-                            newMePlayer.className = 'Player me show-me';
-                            playerGrid.appendChild(newMePlayer);
-                            playerMe = newMePlayer;
-                        } else {
-                            playerMe = document.querySelector('.Player.me');
-                            playerMe.classList.add('show-me');
-                        }
-                        startGame();
+                        gameOverText.style.display = 'block';
                     }
-                }, 2000); // 2 seconds for blinking
+                }, 2000); // 2 seconds
             }
 
             function resetGame() {
@@ -653,7 +643,7 @@
                 isGameOverTransitioning = false;
                 updateScore();
                 
-                // Remove all players
+                // Clean up existing players and remove all special classes
                 document.querySelectorAll('.Player').forEach(p => {
                     if (p && p.isConnected) {
                         p.classList.remove('blinking', 'collided');
@@ -661,11 +651,29 @@
                     }
                 });
                 
-                // Hide start overlay and reset state
-                if (startOverlay) startOverlay.style.display = 'flex';
-                hasStarted = false;
-                isPaused = true;
-                // Don't create player me or start game until up arrow is pressed
+                // Recreate the me player
+                const newMePlayer = document.createElement('div');
+                newMePlayer.className = 'Player me show-me';
+                const playerGrid = playerColumn.querySelector('.Player-Grid');
+                if (playerGrid) {
+                    playerGrid.appendChild(newMePlayer);
+                    playerMe = newMePlayer;
+                }
+                
+                // Reset position
+                currentColumn = 1;
+                currentX = COLUMN_POSITIONS[currentColumn];
+                currentY = 151;
+                updatePosition();
+                
+                // Reset game state
+                isGameOver = false;
+                isPaused = false;
+                playButton.style.display = 'none';
+                pauseButton.style.display = 'block';
+                
+                // Start fresh game
+                startGame();
             }
 
             function updatePosition() {
@@ -805,62 +813,35 @@
 
             function ensureThreeCars(defaultPlayers) {
                 if (isGameOver || isPaused) return defaultPlayers;
+                
                 const currentCars = defaultPlayers.length;
                 const minCars = 5;
                 const spacing = 150;
+                
                 // Don't add more players if we're at the maximum
                 if (currentCars >= MAX_PLAYERS) return defaultPlayers;
-                // Track which columns are occupied by default players in visible area
-                const occupiedColumns = new Set();
-                defaultPlayers.forEach(player => {
-                    if (player && player.isConnected) {
-                        const left = parseFloat(player.style.left);
-                        const colIndex = COLUMN_POSITIONS.findIndex(pos => pos === left);
-                        if (colIndex !== -1) {
-                            // Only consider players that are visible (top > -44)
-                            if (parseFloat(player.style.top) > -44) {
-                                occupiedColumns.add(colIndex);
-                            }
-                        }
-                    }
-                });
-                // If all columns are occupied, remove one at random to ensure a gap
-                if (occupiedColumns.size === COLUMN_POSITIONS.length) {
-                    // Remove the default player with the highest top (closest to top of screen)
-                    let toRemove = null;
-                    let minTop = Infinity;
-                    defaultPlayers.forEach(player => {
-                        if (player && player.isConnected) {
-                            const top = parseFloat(player.style.top);
-                            if (top < minTop) {
-                                minTop = top;
-                                toRemove = player;
-                            }
-                        }
-                    });
-                    if (toRemove) {
-                        toRemove.remove();
-                        // Remove from defaultPlayers array
-                        const idx = defaultPlayers.indexOf(toRemove);
-                        if (idx !== -1) defaultPlayers.splice(idx, 1);
-                    }
-                }
+                
                 if (currentCars < minCars) {
                     const carsToAdd = Math.min(minCars - currentCars, MAX_PLAYERS - currentCars);
                     for (let i = 0; i < carsToAdd; i++) {
-                        // Find available columns
-                        const availableColumns = COLUMN_POSITIONS.map((_, idx) => idx).filter(idx => !occupiedColumns.has(idx));
-                        let newColumn;
-                        if (availableColumns.length > 0) {
-                            newColumn = availableColumns[Math.floor(Math.random() * availableColumns.length)];
-                        } else {
-                            newColumn = Math.floor(Math.random() * COLUMN_POSITIONS.length);
-                        }
                         const newCar = createDefaultPlayer();
                         newCar.style.top = `${-44 - (i * spacing)}px`;
+                        
+                        // Find an available column
+                        let attempts = 0;
+                        let newColumn;
+                        do {
+                            newColumn = Math.floor(Math.random() * COLUMN_POSITIONS.length);
+                            attempts++;
+                            if (attempts > 10) break; // Prevent infinite loop
+                        } while (defaultPlayers.some(car => 
+                            car && car.isConnected &&
+                            parseFloat(car.style.left) === COLUMN_POSITIONS[newColumn] &&
+                            Math.abs(parseFloat(car.style.top) - (-44 - (i * spacing))) < spacing
+                        ));
+                        
                         newCar.style.left = `${COLUMN_POSITIONS[newColumn]}px`;
                         defaultPlayers.push(newCar);
-                        occupiedColumns.add(newColumn);
                     }
                 }
                 return defaultPlayers;
@@ -943,8 +924,21 @@
             // Handle button clicks
             function handleButtonClick(direction) {
                 if (isGameOverTransitioning) return;
+                if (!hasStarted && direction === 'up') {
+                    hasStarted = true;
+                    isPaused = false;
+                    if (startOverlay) startOverlay.style.display = 'none';
+                    // Show the player me when overlay is gone
+                    const mePlayer = document.querySelector('.Player.me');
+                    if (mePlayer) mePlayer.classList.add('show-me');
+                    startGame();
+                    return;
+                }
                 if (!hasStarted) return;
-                if (isGameOver) return;
+                if (isGameOver) {
+                    resetGame();
+                    return;
+                }
                 if (!isPaused) {
                     movePlayer(direction);
                 }
@@ -1060,6 +1054,14 @@
                     toggleMute();
                 });
             }
+
+            // On load, show overlay and pause game
+            if (startOverlay) startOverlay.style.display = 'flex';
+            isPaused = true;
+            hasStarted = false;
+            // Ensure the player me is visible on reload
+            const mePlayerInit = document.querySelector('.Player.me');
+            if (mePlayerInit) mePlayerInit.classList.add('show-me');
         });
     </script>
 </body>
