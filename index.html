@@ -794,35 +794,62 @@
 
             function ensureThreeCars(defaultPlayers) {
                 if (isGameOver || isPaused) return defaultPlayers;
-                
                 const currentCars = defaultPlayers.length;
                 const minCars = 5;
                 const spacing = 150;
-                
                 // Don't add more players if we're at the maximum
                 if (currentCars >= MAX_PLAYERS) return defaultPlayers;
-                
+                // Track which columns are occupied by default players in visible area
+                const occupiedColumns = new Set();
+                defaultPlayers.forEach(player => {
+                    if (player && player.isConnected) {
+                        const left = parseFloat(player.style.left);
+                        const colIndex = COLUMN_POSITIONS.findIndex(pos => pos === left);
+                        if (colIndex !== -1) {
+                            // Only consider players that are visible (top > -44)
+                            if (parseFloat(player.style.top) > -44) {
+                                occupiedColumns.add(colIndex);
+                            }
+                        }
+                    }
+                });
+                // If all columns are occupied, remove one at random to ensure a gap
+                if (occupiedColumns.size === COLUMN_POSITIONS.length) {
+                    // Remove the default player with the highest top (closest to top of screen)
+                    let toRemove = null;
+                    let minTop = Infinity;
+                    defaultPlayers.forEach(player => {
+                        if (player && player.isConnected) {
+                            const top = parseFloat(player.style.top);
+                            if (top < minTop) {
+                                minTop = top;
+                                toRemove = player;
+                            }
+                        }
+                    });
+                    if (toRemove) {
+                        toRemove.remove();
+                        // Remove from defaultPlayers array
+                        const idx = defaultPlayers.indexOf(toRemove);
+                        if (idx !== -1) defaultPlayers.splice(idx, 1);
+                    }
+                }
                 if (currentCars < minCars) {
                     const carsToAdd = Math.min(minCars - currentCars, MAX_PLAYERS - currentCars);
                     for (let i = 0; i < carsToAdd; i++) {
+                        // Find available columns
+                        const availableColumns = COLUMN_POSITIONS.map((_, idx) => idx).filter(idx => !occupiedColumns.has(idx));
+                        let newColumn;
+                        if (availableColumns.length > 0) {
+                            newColumn = availableColumns[Math.floor(Math.random() * availableColumns.length)];
+                        } else {
+                            newColumn = Math.floor(Math.random() * COLUMN_POSITIONS.length);
+                        }
                         const newCar = createDefaultPlayer();
                         newCar.style.top = `${-44 - (i * spacing)}px`;
-                        
-                        // Find an available column
-                        let attempts = 0;
-                        let newColumn;
-                        do {
-                            newColumn = Math.floor(Math.random() * COLUMN_POSITIONS.length);
-                            attempts++;
-                            if (attempts > 10) break; // Prevent infinite loop
-                        } while (defaultPlayers.some(car => 
-                            car && car.isConnected &&
-                            parseFloat(car.style.left) === COLUMN_POSITIONS[newColumn] &&
-                            Math.abs(parseFloat(car.style.top) - (-44 - (i * spacing))) < spacing
-                        ));
-                        
                         newCar.style.left = `${COLUMN_POSITIONS[newColumn]}px`;
                         defaultPlayers.push(newCar);
+                        occupiedColumns.add(newColumn);
                     }
                 }
                 return defaultPlayers;
