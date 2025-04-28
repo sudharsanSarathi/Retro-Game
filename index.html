@@ -2,34 +2,998 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gameboy</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Trial</title>
+    <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
+    <audio id="moveSound" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQADQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxDsAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" preload="auto"></audio>
+    <audio id="buttonSound" src="assets/button sound.mp3" preload="auto"></audio>
+    <audio id="endSound" src="assets/end.mp3" preload="auto"></audio>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: url('assets/figma-bg-image.png') no-repeat center center fixed;
+            background-size: cover;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .Game-Console {
+            position: relative;
+            width: 375px;
+            height: 667px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .Screen {
+            position: relative;
+            width: 325px;
+            height: 542px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            background: url('assets/screen.png') no-repeat center/contain;
+        }
+
+        .Game-Area {
+            width: 292px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 32px; /* Spacing between Player-Background and Button Container */
+        }
+
+        .Player-Container {
+            width: 100%;
+            height: 304px;  /* Exact height from Figma */
+            margin-top: 10px; /* Adding top spacing */
+        }
+
+        .Player-Background {
+            width: 292px;
+            height: 100%;
+            padding: 20px;
+            background: url('assets/player-background.png') no-repeat center/cover;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-radius: 10px;
+            gap: 31px;
+        }
+
+        .Player-Column {
+            width: 165px;
+            height: 264px;
+            border: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            padding: 70px 0 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .Player-Grid {
+            width: 165px;
+            padding: 0 3px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 49px;
+        }
+
+        .Player {
+            width: 33px;
+            height: 44px;
+            background-size: cover;
+            position: relative;
+            transition: all 0.2s linear !important;
+        }
+
+        .Player.default {
+            background-image: url('assets/player.png');
+        }
+
+        .Player.me {
+            background-image: url('assets/player.png');
+            position: absolute;
+        }
+
+        .Player.collided {
+            z-index: 10;
+        }
+
+        .Score-Container {
+            width: 51px;
+            display: flex;
+            flex-direction: column;
+            font-family: 'DS-Digital', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: #171717;
+            text-align: right;
+        }
+
+        .Score-Container > * {
+            width: 100%;
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'DS-Digital', sans-serif;
+            font-size: 24px;
+            color: #171717;
+        }
+
+        .Button-Container {
+            display: flex;
+            margin-top: 32px;
+            gap: 57px;
+            align-items: flex-start; /* Changed from center to flex-start to align to top */
+        }
+
+        .Button-Background {
+            width: 170px;
+            height: 170px;
+            background: url('assets/new-button-background.png') no-repeat center/contain;
+            padding: 2px 5px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .Button-Area {
+            position: absolute;
+            width: 158px;
+            height: 158px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .Horizontal-Arrows {
+            position: absolute;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 158px;
+        }
+
+        .Vertical-Arrows {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 158px;
+        }
+
+        .arrow-btn {
+            width: 62px;
+            height: 62px;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .arrow-btn:active {
+            transform: scale(0.95);
+            transition: transform 0.1s;
+        }
+
+        .arrow-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .Control-Buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 53px;
+        }
+
+        .control-btn {
+            width: 53px;
+            height: 20px;
+            position: relative;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .control-btn img {
+            width: 100%;
+            height: 20px;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .control-btn[data-muted="false"] img[alt="Mute"] {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .control-btn[data-muted="false"] img[alt="Unmute"] {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .control-btn[data-muted="true"] img[alt="Mute"] {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .control-btn[data-muted="true"] img[alt="Unmute"] {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .play-btn, .pause-btn {
+            width: 53px;
+            height: 53px;
+            cursor: pointer;
+        }
+
+        .game-over-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'DS-Digital', sans-serif;
+            font-size: 54px;
+            color: #171717;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+        }
+
+        /* Column guides for visualization */
+        .column-guides {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .column-guide {
+            width: 41px;
+            height: 100%;
+            border-right: 1px dashed rgba(0, 0, 0, 0.1);
+        }
+
+        .column-guide:last-child {
+            border-right: none;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .blinking {
+            animation: blink 1.2s linear infinite;
+        }
+
+        /* Add keyboard indicator styles */
+        .keyboard-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'DS-Digital', sans-serif;
+            font-size: 12px;
+            color: #171717;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        @media (min-width: 768px) {
+            .keyboard-controls {
+                opacity: 1;
+            }
+        }
+
+        .muted img[alt="Mute"] {
+            display: none;
+        }
+        
+        .unmuted img[alt="Mute"] {
+            display: block;
+        }
+        
+        .muted img[alt="Unmute"] {
+            display: block;
+        }
+        
+        .unmuted img[alt="Unmute"] {
+            display: none;
+        }
+
+        .figma-image-below-console {
+            display: block;
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+        }
+    </style>
 </head>
 <body>
-    <div class="gameboy">
-        <div class="screen">
-            <div class="screen-content">
-                <!-- Screen content will go here -->
+    <div style="display: flex; flex-direction: column; align-items: center; width: 100vw;">
+        <!-- Game Console -->
+        <div class="Game-Console">
+            <!-- Background Image -->
+            
+            <!-- Screen -->
+            <div class="Screen">
+                <!-- Game Area -->
+                <div class="Game-Area">
+                    <!-- Player Container -->
+                    <div class="Player-Container">
+                        <div class="Player-Background">
+                            <div class="Player-Column">
+                                <div class="column-guides">
+                                    <div class="column-guide"></div>
+                                    <div class="column-guide"></div>
+                                    <div class="column-guide"></div>
+                                    <div class="column-guide"></div>
+                                </div>
+                                <div class="game-over-text">GAME OVER</div>
+                                <div class="Player-Grid">
+                                    <div class="Player me"></div>
+                                </div>
+                            </div>
+                            <div class="Score-Container">
+                                <div>Score</div>
+                                <div class="score-value">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Button Container -->
+                    <div class="Button-Container">
+                        <div class="Button-Background">
+                            <div class="Button-Area">
+                                <div class="Horizontal-Arrows">
+                                    <div class="arrow-btn">
+                                        <img src="assets/left-arrow.png" alt="Left">
+                                    </div>
+                                    <div class="arrow-btn">
+                                        <img src="assets/right-arrow.png" alt="Right">
+                                    </div>
+                                </div>
+                                <div class="Vertical-Arrows">
+                                    <div class="arrow-btn">
+                                        <img src="assets/top-arrow.png" alt="Up">
+                                    </div>
+                                    <div class="arrow-btn">
+                                        <img src="assets/bottom-arrow.png" alt="Down">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="Control-Buttons">
+                            <div class="control-btn" id="muteBtn" data-muted="false">
+                                <img src="assets/mute.png" alt="Mute">
+                                <img src="assets/unmute.png" alt="Unmute">
+                            </div>
+                            <div class="control-btn">
+                                <img src="assets/refresh-button.png" alt="Refresh">
+                            </div>
+                            <div class="control-btn">
+                                <img src="assets/play-button.png" alt="Play" class="play-btn">
+                                <img src="assets/pause-button.png" alt="Pause" class="pause-btn" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            <a href="https://www.linkedin.com/in/sudharsan-sarathi/" target="_blank" rel="noopener noreferrer" style="margin-top: 40px;">
+                <img src="assets/follow-figma-image.png" alt="Figma Asset" class="figma-image-below-console" />
+            </a>
         </div>
-        <div class="controls">
-            <div class="d-pad">
-                <div class="d-pad-up"></div>
-                <div class="d-pad-left"></div>
-                <div class="d-pad-center"></div>
-                <div class="d-pad-right"></div>
-                <div class="d-pad-down"></div>
-            </div>
-            <div class="buttons">
-                <div class="button-a"></div>
-                <div class="button-b"></div>
-            </div>
-        </div>
-        <div class="start-select">
-            <div class="start-button"></div>
-            <div class="select-button"></div>
+
+        <!-- Add keyboard controls info -->
+        <div class="keyboard-controls">
+            Use Arrow Keys to move | Space to Play/Pause
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Prevent double tap zoom on iOS
+            document.addEventListener('touchend', function(event) {
+                event.preventDefault();
+                event.target.click();
+            }, true);
+
+            let playerMe = document.querySelector('.Player.me');
+            const playerColumn = document.querySelector('.Player-Column');
+            const gameOverText = document.querySelector('.game-over-text');
+            const refreshButton = document.querySelector('img[alt="Refresh"]').parentElement;
+            const playButton = document.querySelector('.play-btn');
+            const pauseButton = document.querySelector('.pause-btn');
+            const scoreValue = document.querySelector('.score-value');
+            const COLUMN_WIDTH = 41;
+            const COLUMN_POSITIONS = [3, 44, 85, 126];
+            let currentColumn = 1;
+            let currentX = COLUMN_POSITIONS[currentColumn];
+            let currentY = 151;
+            let score = 0;
+            let isGameOver = false;
+            let isPaused = false;
+            let gameSpeed = 1;
+            let gameTime = 0;
+            let lastFrameTime = 0;
+            const TARGET_FRAME_RATE = 30;
+            const FRAME_INTERVAL = 1000 / TARGET_FRAME_RATE;
+            let isGameOverTransitioning = false;
+            const muteButton = document.getElementById('muteBtn');
+            let isMuted = false;
+            let buttonSoundUnlocked = false;
+            
+            // Remove existing default players
+            document.querySelectorAll('.Player.default').forEach(p => p.remove());
+            
+            // Create initial me player
+            const playerGrid = document.querySelector('.Player-Grid');
+            playerGrid.innerHTML = ''; // Clear any existing content
+            const initialMePlayer = document.createElement('div');
+            initialMePlayer.className = 'Player me';
+            playerGrid.appendChild(initialMePlayer);
+            
+            // Set initial position for player
+            updatePosition();
+
+            function updateScore() {
+                // Convert score to string and pad with zeros based on length
+                const scoreStr = String(score);
+                const paddedScore = scoreStr.padStart(Math.max(scoreStr.length, 1), '0');
+                scoreValue.textContent = paddedScore;
+            }
+
+            function triggerHapticFeedback() {
+                if (window.navigator.vibrate) {
+                    window.navigator.vibrate(200); // Vibrate for 200ms
+                }
+            }
+
+            function togglePause() {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    clearInterval(gameLoop);
+                    // Show play button when paused
+                    playButton.style.display = 'block';
+                    pauseButton.style.display = 'none';
+                } else {
+                    startGame(true);
+                    // Show pause button when playing
+                    playButton.style.display = 'none';
+                    pauseButton.style.display = 'block';
+                }
+            }
+
+            function toggleMute() {
+                isMuted = !isMuted;
+                muteButton.setAttribute('data-muted', isMuted);
+                
+                // Update all audio elements
+                [buttonSound, endSound].forEach(sound => {
+                    if (sound) {
+                        sound.muted = isMuted;
+                    }
+                });
+            }
+
+            function gameOver() {
+                if (isGameOver || isGameOverTransitioning) return;
+                isGameOverTransitioning = true;
+                isGameOver = true;
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                // Play end sound immediately on collision
+                if (endSound && !isMuted) {
+                    endSound.currentTime = 0;
+                    endSound.play().catch(err => console.log('End sound play failed:', err));
+                }
+                // Remove all players except the collided ones
+                document.querySelectorAll('.Player:not(.collided)').forEach(player => {
+                    if (player && player.isConnected) {
+                        player.remove();
+                    }
+                });
+                // Add blinking effect to collided players
+                document.querySelectorAll('.Player.collided').forEach(player => {
+                    player.style.transition = 'none';
+                    player.classList.add('blinking');
+                });
+                // Show game over after blinking
+                setTimeout(() => {
+                    isGameOverTransitioning = false;
+                    if (isGameOver) {
+                        document.querySelectorAll('.Player.collided').forEach(player => {
+                            if (player && player.isConnected) {
+                                player.remove();
+                            }
+                        });
+                        gameOverText.style.display = 'block';
+                    }
+                }, 2000); // 2 seconds
+            }
+
+            function resetGame() {
+                // Don't allow reset during transition
+                if (isGameOverTransitioning) return;
+                
+                // Stop end sound
+                if (endSound) {
+                    endSound.pause();
+                    endSound.currentTime = 0;
+                }
+                
+                // Hide game over text immediately
+                gameOverText.style.display = 'none';
+                
+                // Cancel existing game loop
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                
+                // Clear any pending timeouts
+                const highestTimeoutId = setTimeout(";");
+                for (let i = 0; i < highestTimeoutId; i++) {
+                    clearTimeout(i);
+                }
+                
+                // Reset game state
+                score = 0;
+                gameSpeed = 1;
+                gameTime = 0;
+                isGameOverTransitioning = false;
+                updateScore();
+                
+                // Clean up existing players and remove all special classes
+                document.querySelectorAll('.Player').forEach(p => {
+                    if (p && p.isConnected) {
+                        p.classList.remove('blinking', 'collided');
+                        p.remove();
+                    }
+                });
+                
+                // Recreate the me player
+                const newMePlayer = document.createElement('div');
+                newMePlayer.className = 'Player me';
+                const playerGrid = playerColumn.querySelector('.Player-Grid');
+                if (playerGrid) {
+                    playerGrid.appendChild(newMePlayer);
+                    playerMe = newMePlayer;
+                }
+                
+                // Reset position
+                currentColumn = 1;
+                currentX = COLUMN_POSITIONS[currentColumn];
+                currentY = 151;
+                updatePosition();
+                
+                // Reset game state
+                isGameOver = false;
+                isPaused = false;
+                playButton.style.display = 'none';
+                pauseButton.style.display = 'block';
+                
+                // Start fresh game
+                startGame();
+            }
+
+            function updatePosition() {
+                playerMe = document.querySelector('.Player.me'); // Update player reference
+                if (playerMe) {
+                    playerMe.style.left = `${currentX}px`;
+                    playerMe.style.top = `${currentY}px`;
+                }
+            }
+
+            function getRandomColumn() {
+                return COLUMN_POSITIONS[Math.floor(Math.random() * COLUMN_POSITIONS.length)];
+            }
+
+            function createDefaultPlayer() {
+                const defaultPlayer = document.createElement('div');
+                defaultPlayer.className = 'Player default';
+                defaultPlayer.style.position = 'absolute';
+                defaultPlayer.style.top = '-44px';  // Start just above the visible area
+                defaultPlayer.style.left = `${getRandomColumn()}px`;
+                defaultPlayer.style.transition = 'all 0.2s linear';  // Smooth transition for all properties
+                playerColumn.appendChild(defaultPlayer);
+                return defaultPlayer;
+            }
+
+            let animationFrameId = null;
+            const MAX_PLAYERS = 10; // Limit maximum players on screen
+            
+            function moveDefaultPlayer(player) {
+                if (!player || !player.isConnected) return false;
+                
+                let topPosition = parseFloat(player.style.top);
+                let previousTop = topPosition;
+                topPosition += 2 * gameSpeed;
+                
+                // Check if player has passed the me player
+                if (!isGameOver && playerMe) {
+                    const meRect = playerMe.getBoundingClientRect();
+                    const playerRect = player.getBoundingClientRect();
+                    
+                    // If player has just crossed the me player's position, increment score
+                    if (previousTop <= meRect.top && topPosition > meRect.top) {
+                        score += 1;
+                        updateScore();
+                    }
+                }
+                
+                if (topPosition > 224) {
+                    player.remove();
+                    return false;
+                }
+                
+                player.style.top = `${topPosition}px`;
+                return true;
+            }
+
+            function checkCollision(player1, player2) {
+                const rect1 = player1.getBoundingClientRect();
+                const rect2 = player2.getBoundingClientRect();
+                
+                const buffer = 5;
+                const hasCollided = !(rect1.right - buffer < rect2.left + buffer || 
+                        rect1.left + buffer > rect2.right - buffer || 
+                        rect1.bottom - buffer < rect2.top + buffer || 
+                        rect1.top + buffer > rect2.bottom - buffer);
+
+                if (hasCollided) {
+                    player1.classList.add('collided');
+                    player2.classList.add('collided');
+                }
+                
+                return hasCollided;
+            }
+
+            function playMoveSound() {
+                if (audioContext && moveBuffer) {
+                    try {
+                        const source = audioContext.createBufferSource();
+                        source.buffer = moveBuffer;
+                        source.connect(audioContext.destination);
+                        source.start(0);
+                    } catch (error) {
+                        console.error('Error playing sound:', error);
+                    }
+                }
+            }
+
+            const buttonSound = document.getElementById('buttonSound');
+            const endSound = document.getElementById('endSound');
+
+            function playButtonSound() {
+                if (buttonSound && !isMuted) {
+                    buttonSound.currentTime = 0;
+                    buttonSound.play().catch(err => console.log('Sound play failed:', err));
+                }
+            }
+
+            function movePlayer(direction) {
+                if (isGameOver || isPaused || isGameOverTransitioning) return;
+                
+                let moved = false;
+                
+                switch(direction) {
+                    case 'left':
+                        if (currentColumn > 0) {
+                            currentColumn--;
+                            currentX = COLUMN_POSITIONS[currentColumn];
+                            moved = true;
+                        }
+                        break;
+                    case 'right':
+                        if (currentColumn < 3) {
+                            currentColumn++;
+                            currentX = COLUMN_POSITIONS[currentColumn];
+                            moved = true;
+                        }
+                        break;
+                    case 'up':
+                        if (currentY > 40) {
+                            currentY = Math.max(40, currentY - 33);
+                            moved = true;
+                        }
+                        break;
+                    case 'down':
+                        if (currentY < 224) {
+                            currentY = Math.min(224, currentY + 33);
+                            moved = true;
+                        }
+                        break;
+                }
+                
+                if (moved) {
+                    playButtonSound();
+                    updatePosition();
+                }
+            }
+
+            function ensureThreeCars(defaultPlayers) {
+                if (isGameOver || isPaused) return defaultPlayers;
+                
+                const currentCars = defaultPlayers.length;
+                const minCars = 5;
+                const spacing = 150;
+                
+                // Don't add more players if we're at the maximum
+                if (currentCars >= MAX_PLAYERS) return defaultPlayers;
+                
+                if (currentCars < minCars) {
+                    const carsToAdd = Math.min(minCars - currentCars, MAX_PLAYERS - currentCars);
+                    for (let i = 0; i < carsToAdd; i++) {
+                        const newCar = createDefaultPlayer();
+                        newCar.style.top = `${-44 - (i * spacing)}px`;
+                        
+                        // Find an available column
+                        let attempts = 0;
+                        let newColumn;
+                        do {
+                            newColumn = Math.floor(Math.random() * COLUMN_POSITIONS.length);
+                            attempts++;
+                            if (attempts > 10) break; // Prevent infinite loop
+                        } while (defaultPlayers.some(car => 
+                            car && car.isConnected &&
+                            parseFloat(car.style.left) === COLUMN_POSITIONS[newColumn] &&
+                            Math.abs(parseFloat(car.style.top) - (-44 - (i * spacing))) < spacing
+                        ));
+                        
+                        newCar.style.left = `${COLUMN_POSITIONS[newColumn]}px`;
+                        defaultPlayers.push(newCar);
+                    }
+                }
+                return defaultPlayers;
+            }
+
+            function gameLoop() {
+                if (isGameOver || isPaused) {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                    return;
+                }
+
+                const currentTime = performance.now();
+                const deltaTime = currentTime - lastFrameTime;
+
+                if (deltaTime < FRAME_INTERVAL) {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                    return;
+                }
+
+                lastFrameTime = currentTime - (deltaTime % FRAME_INTERVAL);
+
+                try {
+                    gameTime++;
+                    if (gameTime % 150 === 0) {
+                        gameSpeed = Math.min(gameSpeed * 1.2, 2.5);
+                    }
+
+                    // Get current players and remove any null/disconnected ones
+                    let defaultPlayers = Array.from(document.querySelectorAll('.Player.default'))
+                        .filter(player => player && player.isConnected);
+
+                    // Update existing players
+                    defaultPlayers = defaultPlayers.filter(player => {
+                        try {
+                            if (!player || !player.isConnected) return false;
+                            
+                            const stillInGame = moveDefaultPlayer(player);
+                            if (!stillInGame) return false;
+                            
+                            if (playerMe && checkCollision(playerMe, player)) {
+                                gameOver();
+                                return false;
+                            }
+                            
+                            return true;
+                        } catch (error) {
+                            console.error('Error updating player:', error);
+                            return false;
+                        }
+                    });
+
+                    // Ensure minimum number of players
+                    defaultPlayers = ensureThreeCars(defaultPlayers);
+
+                } catch (error) {
+                    console.error('Game loop error:', error);
+                }
+
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            function startGame(resuming = false) {
+                if (!resuming) {
+                    gameTime = 0;
+                    gameSpeed = 1;
+                    // Clean up any existing players
+                    document.querySelectorAll('.Player.default').forEach(p => {
+                        if (p && p.isConnected) p.remove();
+                    });
+                }
+                
+                // Cancel any existing animation frame
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                
+                lastFrameTime = performance.now();
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            // Handle button clicks
+            function handleButtonClick(direction) {
+                // Don't handle movement during game over transition
+                if (isGameOverTransitioning) return;
+                
+                if (isGameOver) {
+                    resetGame();
+                    return;
+                }
+                
+                if (!isPaused) {
+                    movePlayer(direction);
+                }
+            }
+
+            // Setup controls
+            function setupControls() {
+                document.querySelectorAll('.arrow-btn').forEach(btn => {
+                    const img = btn.querySelector('img');
+                    const direction = img.alt.toLowerCase();
+                    ['touchstart', 'mousedown'].forEach(eventType => {
+                        btn.addEventListener(eventType, (e) => {
+                            e.preventDefault();
+                            if (!isGameOverTransitioning) {
+                                handleButtonClick(direction);
+                            }
+                        });
+                    });
+                });
+            }
+
+            // Handle refresh button click
+            refreshButton.addEventListener('click', () => {
+                resetGame();
+            });
+
+            // Handle play/pause button
+            playButton.parentElement.addEventListener('click', () => {
+                if (!isGameOver) {
+                    togglePause();
+                }
+            });
+
+            // Handle page visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    if (!isGameOver && !isPaused) {
+                        togglePause();
+                    }
+                }
+            });
+
+            // Handle page refresh/reload
+            window.addEventListener('beforeunload', () => {
+                // Clear any pending timeouts
+                const highestTimeoutId = setTimeout(";");
+                for (let i = 0; i < highestTimeoutId; i++) {
+                    clearTimeout(i);
+                }
+                
+                // Clear game state
+                isGameOver = true;
+                isPaused = true;
+                
+                // Hide game over text
+                gameOverText.style.display = 'none';
+            });
+
+            window.addEventListener('load', () => {
+                // Hide game over text immediately on load
+                gameOverText.style.display = 'none';
+                // Start fresh game on load
+                resetGame();
+            });
+
+            // Initialize game
+            setupControls();
+            resetGame(); // Start with resetGame instead of startGame
+
+            // Create proper audio context and sound
+            let audioContext;
+            let moveBuffer;
+
+            async function initAudio() {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const response = await fetch('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQADQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxDsAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
+                    const arrayBuffer = await response.arrayBuffer();
+                    moveBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                } catch (error) {
+                    console.error('Error initializing audio:', error);
+                }
+            }
+
+            // Initialize audio on first user interaction
+            document.addEventListener('click', function initOnFirstClick() {
+                initAudio();
+                document.removeEventListener('click', initOnFirstClick);
+            });
+
+            // Unlock button sound on DOMContentLoaded to ensure it is ready for first click
+            if (buttonSound) {
+                buttonSound.play().then(() => {
+                    buttonSound.pause();
+                    buttonSound.currentTime = 0;
+                }).catch(() => {
+                    // Ignore errors, will try again on next click
+                });
+            }
+            if (endSound) {
+                endSound.play().then(() => {
+                    endSound.pause();
+                    endSound.currentTime = 0;
+                }).catch(() => {
+                    // Ignore errors, will try again on next click
+                });
+            }
+            // Add mute button click handler
+            if (muteButton) {
+                muteButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleMute();
+                });
+            }
+        });
+    </script>
 </body>
 </html> 
