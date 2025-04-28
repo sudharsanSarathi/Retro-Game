@@ -653,7 +653,7 @@
                 
                 // Recreate the me player
                 const newMePlayer = document.createElement('div');
-                newMePlayer.className = 'Player me show-me';
+                newMePlayer.className = 'Player me'; // Don't add show-me by default
                 const playerGrid = playerColumn.querySelector('.Player-Grid');
                 if (playerGrid) {
                     playerGrid.appendChild(newMePlayer);
@@ -671,6 +671,11 @@
                 isPaused = false;
                 playButton.style.display = 'none';
                 pauseButton.style.display = 'block';
+                
+                // Hide the player me if start overlay is visible
+                if (startOverlay && startOverlay.style.display !== 'none') {
+                    if (playerMe) playerMe.classList.remove('show-me');
+                }
                 
                 // Start fresh game
                 startGame();
@@ -1059,9 +1064,9 @@
             if (startOverlay) startOverlay.style.display = 'flex';
             isPaused = true;
             hasStarted = false;
-            // Ensure the player me is visible on reload
+            // Hide the player me initially if start overlay is visible
             const mePlayerInit = document.querySelector('.Player.me');
-            if (mePlayerInit) mePlayerInit.classList.add('show-me');
+            if (mePlayerInit) mePlayerInit.classList.remove('show-me');
         });
     </script>
 </body>
