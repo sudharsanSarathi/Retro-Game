@@ -22,12 +22,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #191A1E;
+            background: url('assets/figma-bg-image.png') no-repeat center center fixed;
             background-size: cover;
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
-            text-align: center; /* Center align all text in body */
         }
 
         .Game-Console {
@@ -117,10 +116,6 @@
         .Player.me {
             background-image: url('assets/player.png');
             position: absolute;
-            display: none !important; /* Hide the player me visually by default */
-        }
-        .Player.me.show-me {
-            display: block !important; /* Show the player me when overlay is gone */
         }
 
         .Player.collided {
@@ -358,44 +353,6 @@
             width: 100%;
             height: auto;
         }
-
-        .start-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0,0,0,0.7);
-            z-index: 200;
-            font-family: 'DS-Digital', sans-serif;
-            font-size: 32px;
-            color: #fff;
-            pointer-events: auto;
-        }
-        .start-blink {
-            animation: blink 1.2s linear infinite;
-        }
-
-        .sticky-footer {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 40px;
-            background: #3821C6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .footer-img {
-            height: 22px;
-            width: auto;
-            display: block;
-        }
     </style>
 </head>
 <body>
@@ -412,7 +369,6 @@
                     <div class="Player-Container">
                         <div class="Player-Background">
                             <div class="Player-Column">
-                                <div class="start-overlay" id="startOverlay"><span class="start-blink">Press up arrow to start</span></div>
                                 <div class="column-guides">
                                     <div class="column-guide"></div>
                                     <div class="column-guide"></div>
@@ -468,18 +424,15 @@
                     </div>
                 </div>
             </div>
-            
+            <a href="https://www.linkedin.com/in/sudharsan-sarathi/" target="_blank" rel="noopener noreferrer" style="margin-top: 40px;">
+                <img src="assets/follow-figma-image.png" alt="Figma Asset" class="figma-image-below-console" />
+            </a>
         </div>
 
         <!-- Add keyboard controls info -->
         <div class="keyboard-controls">
             Use Arrow Keys to move | Space to Play/Pause
         </div>
-    </div>
-
-    <!-- Sticky Footer -->
-    <div class="sticky-footer">
-      <img src="assets/bottom.png" alt="footer" class="footer-img" />
     </div>
 
     <script>
@@ -514,15 +467,12 @@
             const muteButton = document.getElementById('muteBtn');
             let isMuted = false;
             let buttonSoundUnlocked = false;
-            let gameStarted = false;
-            const playerGrid = document.querySelector('.Player-Grid');
-            let hasStarted = false;
-            const startOverlay = document.getElementById('startOverlay');
             
             // Remove existing default players
             document.querySelectorAll('.Player.default').forEach(p => p.remove());
             
             // Create initial me player
+            const playerGrid = document.querySelector('.Player-Grid');
             playerGrid.innerHTML = ''; // Clear any existing content
             const initialMePlayer = document.createElement('div');
             initialMePlayer.className = 'Player me';
@@ -900,7 +850,6 @@
             }
 
             function startGame(resuming = false) {
-                if (!hasStarted && !resuming) return; // Prevent game loop if not started
                 if (!resuming) {
                     gameTime = 0;
                     gameSpeed = 1;
@@ -909,32 +858,26 @@
                         if (p && p.isConnected) p.remove();
                     });
                 }
+                
                 // Cancel any existing animation frame
                 if (animationFrameId) {
                     cancelAnimationFrame(animationFrameId);
                 }
+                
                 lastFrameTime = performance.now();
                 animationFrameId = requestAnimationFrame(gameLoop);
             }
 
             // Handle button clicks
             function handleButtonClick(direction) {
+                // Don't handle movement during game over transition
                 if (isGameOverTransitioning) return;
-                if (!hasStarted && direction === 'up') {
-                    hasStarted = true;
-                    isPaused = false;
-                    if (startOverlay) startOverlay.style.display = 'none';
-                    // Show the player me when overlay is gone
-                    const mePlayer = document.querySelector('.Player.me');
-                    if (mePlayer) mePlayer.classList.add('show-me');
-                    startGame();
-                    return;
-                }
-                if (!hasStarted) return;
+                
                 if (isGameOver) {
                     resetGame();
                     return;
                 }
+                
                 if (!isPaused) {
                     movePlayer(direction);
                 }
@@ -1002,7 +945,7 @@
 
             // Initialize game
             setupControls();
-            resetGame();
+            resetGame(); // Start with resetGame instead of startGame
 
             // Create proper audio context and sound
             let audioContext;
@@ -1050,14 +993,6 @@
                     toggleMute();
                 });
             }
-
-            // On load, show overlay and pause game
-            if (startOverlay) startOverlay.style.display = 'flex';
-            isPaused = true;
-            hasStarted = false;
-            // Hide the player me initially
-            const mePlayerInit = document.querySelector('.Player.me');
-            if (mePlayerInit) mePlayerInit.classList.remove('show-me');
         });
     </script>
 </body>

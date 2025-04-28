@@ -1,0 +1,18 @@
+.sticky-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32px;
+  background: #3821C6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.footer-img {
+  height: 22px;
+  width: auto;
+  display: block;
+} 
