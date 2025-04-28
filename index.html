@@ -520,18 +520,14 @@
             let hasStarted = false;
             const startOverlay = document.getElementById('startOverlay');
             
-            // Remove existing default players
+            // On first load, show only start overlay, hide all players
+            if (startOverlay) startOverlay.style.display = 'flex';
+            isPaused = true;
+            hasStarted = false;
+            // Remove all default players and player me
             document.querySelectorAll('.Player.default').forEach(p => p.remove());
+            document.querySelectorAll('.Player.me').forEach(p => p.remove());
             
-            // Create initial me player
-            playerGrid.innerHTML = ''; // Clear any existing content
-            const initialMePlayer = document.createElement('div');
-            initialMePlayer.className = 'Player me';
-            playerGrid.appendChild(initialMePlayer);
-            
-            // Set initial position for player
-            updatePosition();
-
             function updateScore() {
                 // Convert score to string and pad with zeros based on length
                 const scoreStr = String(score);
@@ -595,11 +591,7 @@
                     player.style.transition = 'none';
                     player.classList.add('blinking');
                 });
-                // Ensure player me is visible and start overlay is hidden
-                const mePlayer = document.querySelector('.Player.me');
-                if (mePlayer) mePlayer.classList.add('show-me');
-                if (startOverlay) startOverlay.style.display = 'none';
-                // Show game over after blinking
+                // After blinking, return to start-blink state
                 setTimeout(() => {
                     isGameOverTransitioning = false;
                     if (isGameOver) {
@@ -608,7 +600,13 @@
                                 player.remove();
                             }
                         });
-                        gameOverText.style.display = 'block';
+                        gameOverText.style.display = 'none';
+                        // Show start overlay and hide all players
+                        if (startOverlay) startOverlay.style.display = 'flex';
+                        document.querySelectorAll('.Player.default').forEach(p => p.remove());
+                        document.querySelectorAll('.Player.me').forEach(p => p.remove());
+                        hasStarted = false;
+                        isPaused = true;
                     }
                 }, 2000); // 2 seconds
             }
@@ -644,7 +642,7 @@
                 isGameOverTransitioning = false;
                 updateScore();
                 
-                // Clean up existing players and remove all special classes
+                // Remove all players
                 document.querySelectorAll('.Player').forEach(p => {
                     if (p && p.isConnected) {
                         p.classList.remove('blinking', 'collided');
@@ -652,34 +650,11 @@
                     }
                 });
                 
-                // Recreate the me player
-                const newMePlayer = document.createElement('div');
-                newMePlayer.className = 'Player me'; // Don't add show-me by default
-                const playerGrid = playerColumn.querySelector('.Player-Grid');
-                if (playerGrid) {
-                    playerGrid.appendChild(newMePlayer);
-                    playerMe = newMePlayer;
-                }
-                
-                // Reset position
-                currentColumn = 1;
-                currentX = COLUMN_POSITIONS[currentColumn];
-                currentY = 151;
-                updatePosition();
-                
-                // Reset game state
-                isGameOver = false;
-                isPaused = false;
-                playButton.style.display = 'none';
-                pauseButton.style.display = 'block';
-                
-                // Hide the player me if start overlay is visible
-                if (startOverlay && startOverlay.style.display !== 'none') {
-                    if (playerMe) playerMe.classList.remove('show-me');
-                }
-                
-                // Start fresh game
-                startGame();
+                // Hide start overlay and reset state
+                if (startOverlay) startOverlay.style.display = 'flex';
+                hasStarted = false;
+                isPaused = true;
+                // Don't create player me or start game until up arrow is pressed
             }
 
             function updatePosition() {
@@ -934,9 +909,17 @@
                     hasStarted = true;
                     isPaused = false;
                     if (startOverlay) startOverlay.style.display = 'none';
-                    // Show the player me when overlay is gone
-                    const mePlayer = document.querySelector('.Player.me');
-                    if (mePlayer) mePlayer.classList.add('show-me');
+                    // Create the player me
+                    if (!document.querySelector('.Player.me')) {
+                        const newMePlayer = document.createElement('div');
+                        newMePlayer.className = 'Player me show-me';
+                        playerGrid.appendChild(newMePlayer);
+                        playerMe = newMePlayer;
+                    } else {
+                        playerMe = document.querySelector('.Player.me');
+                        playerMe.classList.add('show-me');
+                    }
+                    // Start the game
                     startGame();
                     return;
                 }
@@ -1060,14 +1043,6 @@
                     toggleMute();
                 });
             }
-
-            // On load, hide start overlay and show player me
-            if (startOverlay) startOverlay.style.display = 'none';
-            isPaused = true;
-            hasStarted = false;
-            // Show the player me initially
-            const mePlayerInit = document.querySelector('.Player.me');
-            if (mePlayerInit) mePlayerInit.classList.add('show-me');
         });
     </script>
 </body>
