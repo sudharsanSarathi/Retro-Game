@@ -517,16 +517,18 @@
             let buttonSoundUnlocked = false;
             let gameStarted = false;
             const playerGrid = document.querySelector('.Player-Grid');
-            let hasStarted = false;
-            const startOverlay = document.getElementById('startOverlay');
-            
-            // On first load, show only start overlay, hide all players
-            if (startOverlay) startOverlay.style.display = 'flex';
-            isPaused = true;
-            hasStarted = false;
+            let hasStarted = true; // Always start immediately
             // Remove all default players and player me
             document.querySelectorAll('.Player.default').forEach(p => p.remove());
             document.querySelectorAll('.Player.me').forEach(p => p.remove());
+            // Create the player me
+            const newMePlayer = document.createElement('div');
+            newMePlayer.className = 'Player me show-me';
+            playerGrid.appendChild(newMePlayer);
+            playerMe = newMePlayer;
+            // Start the game immediately
+            isPaused = false;
+            startGame();
             
             function updateScore() {
                 // Convert score to string and pad with zeros based on length
@@ -591,7 +593,7 @@
                     player.style.transition = 'none';
                     player.classList.add('blinking');
                 });
-                // After blinking, show game over text and wait for user input to restart
+                // After blinking, restart the game automatically
                 setTimeout(() => {
                     isGameOverTransitioning = false;
                     if (isGameOver) {
@@ -600,8 +602,22 @@
                                 player.remove();
                             }
                         });
-                        gameOverText.style.display = 'block';
-                        // Do not show start overlay, wait for user input to restart
+                        gameOverText.style.display = 'none';
+                        resetGame();
+                        // Start the game again
+                        isPaused = false;
+                        hasStarted = true;
+                        // Create the player me
+                        if (!document.querySelector('.Player.me')) {
+                            const newMePlayer = document.createElement('div');
+                            newMePlayer.className = 'Player me show-me';
+                            playerGrid.appendChild(newMePlayer);
+                            playerMe = newMePlayer;
+                        } else {
+                            playerMe = document.querySelector('.Player.me');
+                            playerMe.classList.add('show-me');
+                        }
+                        startGame();
                     }
                 }, 2000); // 2 seconds for blinking
             }
@@ -927,45 +943,8 @@
             // Handle button clicks
             function handleButtonClick(direction) {
                 if (isGameOverTransitioning) return;
-                // If game is over, restart on any arrow/button click
-                if (isGameOver) {
-                    gameOverText.style.display = 'none';
-                    resetGame();
-                    // Simulate up arrow press to start the game
-                    hasStarted = true;
-                    isPaused = false;
-                    if (startOverlay) startOverlay.style.display = 'none';
-                    if (!document.querySelector('.Player.me')) {
-                        const newMePlayer = document.createElement('div');
-                        newMePlayer.className = 'Player me show-me';
-                        playerGrid.appendChild(newMePlayer);
-                        playerMe = newMePlayer;
-                    } else {
-                        playerMe = document.querySelector('.Player.me');
-                        playerMe.classList.add('show-me');
-                    }
-                    startGame();
-                    return;
-                }
-                if (!hasStarted && direction === 'up') {
-                    hasStarted = true;
-                    isPaused = false;
-                    if (startOverlay) startOverlay.style.display = 'none';
-                    // Create the player me
-                    if (!document.querySelector('.Player.me')) {
-                        const newMePlayer = document.createElement('div');
-                        newMePlayer.className = 'Player me show-me';
-                        playerGrid.appendChild(newMePlayer);
-                        playerMe = newMePlayer;
-                    } else {
-                        playerMe = document.querySelector('.Player.me');
-                        playerMe.classList.add('show-me');
-                    }
-                    // Start the game
-                    startGame();
-                    return;
-                }
                 if (!hasStarted) return;
+                if (isGameOver) return;
                 if (!isPaused) {
                     movePlayer(direction);
                 }
