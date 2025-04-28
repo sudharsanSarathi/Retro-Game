@@ -18,26 +18,25 @@
         }
         
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: block;
             min-height: 100vh;
             background: #191A1E;
             background-size: cover;
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
-            text-align: center; /* Center align all text in body */
+            text-align: center;
         }
 
         .Game-Console {
             position: relative;
             width: 375px;
-           
+            height: 667px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
+            margin-top: 0;
         }
 
         .background {
@@ -399,7 +398,7 @@
     </style>
 </head>
 <body>
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; width: 100vw;">
+    <div style="width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh;">
         <!-- Game Console -->
         <div class="Game-Console">
             <!-- Background Image -->
