@@ -710,15 +710,13 @@
                 let previousTop = topPosition;
                 topPosition += 2 * gameSpeed;
                 
-                // Check if player has passed the me player
-                if (!isGameOver && playerMe) {
-                    const meRect = playerMe.getBoundingClientRect();
-                    const playerRect = player.getBoundingClientRect();
-                    
-                    // If player has just crossed the me player's position, increment score
-                    if (previousTop <= meRect.top && topPosition > meRect.top) {
+                // Use logical top values for crossing check
+                if (!isGameOver && playerMe && !player._scored) {
+                    // currentY is the logical top of the 'me' player
+                    if (previousTop <= currentY && topPosition > currentY) {
                         score += 1;
                         updateScore();
+                        player._scored = true; // Mark this player as scored
                     }
                 }
                 
