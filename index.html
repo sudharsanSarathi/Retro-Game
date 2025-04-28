@@ -595,6 +595,9 @@
                     player.style.transition = 'none';
                     player.classList.add('blinking');
                 });
+                // Ensure player me is visible
+                const mePlayer = document.querySelector('.Player.me');
+                if (mePlayer) mePlayer.classList.add('show-me');
                 // Show game over after blinking
                 setTimeout(() => {
                     isGameOverTransitioning = false;
@@ -650,7 +653,7 @@
                 
                 // Recreate the me player
                 const newMePlayer = document.createElement('div');
-                newMePlayer.className = 'Player me';
+                newMePlayer.className = 'Player me show-me';
                 const playerGrid = playerColumn.querySelector('.Player-Grid');
                 if (playerGrid) {
                     playerGrid.appendChild(newMePlayer);
@@ -1056,9 +1059,9 @@
             if (startOverlay) startOverlay.style.display = 'flex';
             isPaused = true;
             hasStarted = false;
-            // Hide the player me initially
+            // Ensure the player me is visible on reload
             const mePlayerInit = document.querySelector('.Player.me');
-            if (mePlayerInit) mePlayerInit.classList.remove('show-me');
+            if (mePlayerInit) mePlayerInit.classList.add('show-me');
         });
     </script>
 </body>
